@@ -1,0 +1,29 @@
+spring:
+  application:
+    name: finance-ledger
+  datasource:                      # used when you run without Docker Compose support
+    url: jdbc:postgresql://localhost:5432/expenses
+    username: expenses
+    password: expenses
+  jpa:
+    open-in-view: false            # no lazy loading in controllers (explained below)
+    hibernate:
+      ddl-auto: validate           # Flyway owns the schema; Hibernate only checks it
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          time_zone: UTC
+  threads:
+    virtual:
+      enabled: true                # Java 21 virtual threads for requests
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+logging:
+  level:
+    org.hibernate.SQL: debug       # print every SQL statement, to spot N+1 queries
