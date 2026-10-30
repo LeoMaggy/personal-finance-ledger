@@ -83,7 +83,7 @@ public TransactionService(UserRepository users, CurrentUser currentUser, Transac
      */
     @Transactional
     public TransactionResponse recordTransfer(TransferRequest request) {
-        if(request.fromAccountId() == request.toAccountId()) {
+        if(request.fromAccountId().equals(request.toAccountId())) {
             throw new BusinessRuleException("Cannot transfer to the same account, please choose two different accounts for the transfer.");
         }
         Account fromAccount = accountService.getOwnedAccount(request.fromAccountId());

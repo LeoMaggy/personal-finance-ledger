@@ -3,7 +3,6 @@ package com.mahesh.expenses.audit;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.Length;
 
 import java.time.Instant;
 
