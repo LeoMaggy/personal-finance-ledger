@@ -1,0 +1,13 @@
+package com.mahesh.expenses.audit;
+
+public enum AuditAction {
+    USER_SIGNED_UP,
+    LOGIN_SUCCEEDED,
+    LOGIN_FAILED,
+    ACCOUNT_CREATED,
+    CATEGORY_CREATED,
+    EXPENSE_RECORDED,
+    INCOME_RECORDED,
+    TRANSFER_MADE,
+    TRANSACTION_DELETED
+}

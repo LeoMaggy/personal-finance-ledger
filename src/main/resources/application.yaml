@@ -1,3 +1,9 @@
+app:
+  jwt:
+    # Dev-only default after the colon; on AWS (Day 6) the real secret comes from the JWT_SECRET variable
+    secret: ${JWT_SECRET:hSJBO50ZVgvvE4rZcXOddVW4R5pzNkVEnZHpfrpbrGE=}
+    ttl: 1h                        # token lifetime; Spring converts "1h" into a Duration
+    issuer: finance-ledger
 spring:
   application:
     name: finance-ledger

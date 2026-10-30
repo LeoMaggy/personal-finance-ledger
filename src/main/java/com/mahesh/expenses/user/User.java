@@ -21,15 +21,19 @@ public class User {
     @Column(name = "full_name", nullable = false, length = 100)
     private String fullName;
 
-    @Column(name = "email", unique = true, nullable = false)
+    @Column(unique = true, nullable = false)
     private String email;
+
+    @Column(name = "password_hash", nullable = false, length = 100)
+    private String passwordHash;     // BCrypt hash, never the password itself
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
-    public User(String fullName, String email) {
+    public User(String email, String fullName, String passwordHash) {
         this.fullName = fullName;
         this.email = email;
+        this.passwordHash = passwordHash;
         this.createdAt = Instant.now();
     }
 }

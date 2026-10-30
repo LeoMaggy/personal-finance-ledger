@@ -6,6 +6,8 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -14,6 +16,7 @@ import java.time.Instant;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "accounts")
+@EntityListeners(AuditingEntityListener.class)  // lets @LastModifiedDate work
 public class Account {
 
     @Id
@@ -41,6 +44,10 @@ public class Account {
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
+
+    @LastModifiedDate       // set by Spring Data before every INSERT and UPDATE
+    @Column(name = "updated_at", nullable = false)
+    private Instant updatedAt;
 
     public Account(User user, String name, String currency, AccountType type, BigDecimal openingBalance) {
         if(openingBalance.signum() < 0 && !type.isNegativeBalanceAllowed()){

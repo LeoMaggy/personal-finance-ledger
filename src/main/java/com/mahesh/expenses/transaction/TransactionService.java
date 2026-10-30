@@ -1,6 +1,8 @@
 package com.mahesh.expenses.transaction;
 
 import com.mahesh.expenses.account.Account;
+import com.mahesh.expenses.audit.AuditAction;
+import com.mahesh.expenses.audit.AuditService;
 import com.mahesh.expenses.category.Category;
 import com.mahesh.expenses.category.CategoryType;
 import com.mahesh.expenses.common.BusinessRuleException;
@@ -14,6 +16,7 @@ import com.mahesh.expenses.user.UserRepository;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.mahesh.expenses.common.EntityType;
 
 @Service
 @Transactional(readOnly = true)
@@ -24,13 +27,15 @@ public class TransactionService {
     private final TransactionRepository transactions;
     private final CategoryService categoryService;
     private final AccountService accountService;
+    private final AuditService auditService;
 
-public TransactionService(UserRepository users, CurrentUser currentUser, TransactionRepository transactions, CategoryService categoryService, AccountService accountService) {
+public TransactionService(UserRepository users, CurrentUser currentUser, TransactionRepository transactions, CategoryService categoryService, AccountService accountService, AuditService auditService) {
         this.users = users;
         this.currentUser = currentUser;
         this.transactions = transactions;
         this.categoryService = categoryService;
         this.accountService = accountService;
+        this.auditService = auditService;
     }
 
     public PageResponse<TransactionResponse> list(Pageable pageable) {
@@ -66,7 +71,9 @@ public TransactionService(UserRepository users, CurrentUser currentUser, Transac
             account.credit(request.amount());
             transaction = Transaction.income(user, request.amount(), account, category, request.date(), request.note());
         }
-        transactions.save(transaction);
+        Transaction transactionSaved = transactions.save(transaction);
+        auditService.record(transactionType == TransactionType.EXPENSE ? AuditAction.EXPENSE_RECORDED : AuditAction.INCOME_RECORDED,
+                EntityType.TRANSACTION.name(), transactionSaved.getId(), "%s %s, account %d, category '%s'".formatted(transactionType, request.amount(), account.getId(), category.getName()));
         return TransactionResponse.from(transaction);
     }
 
@@ -92,8 +99,10 @@ public TransactionService(UserRepository users, CurrentUser currentUser, Transac
         fromAccount.debit(request.amount());
         toAccount.credit(request.amount());
         Transaction transaction = Transaction.transfer(user, request.amount(), fromAccount, toAccount, request.date(), request.note());
-        transactions.save(transaction);
-        return TransactionResponse.from(transaction);
+        Transaction transactionSaved = transactions.save(transaction);
+        auditService.record(AuditAction.TRANSFER_MADE,EntityType.TRANSACTION.name(), transactionSaved.getId(),
+                "%s from account %d to account %d".formatted(request.amount(), fromAccount.getId(), toAccount.getId()));
+        return TransactionResponse.from(transactionSaved);
     }
 
     /** Deleting a transaction reverses its effect on the balances, in the same transaction. */
@@ -113,6 +122,8 @@ public TransactionService(UserRepository users, CurrentUser currentUser, Transac
             default -> throw new IllegalStateException("Unexpected transaction type: " + txn.getType());
         }
         transactions.delete(txn);
+        auditService.record(AuditAction.TRANSACTION_DELETED, EntityType.TRANSACTION.name(), txn.getId(),
+                "%s %s reversed".formatted(txn.getType(), txn.getAmount()));
     }
 
 }

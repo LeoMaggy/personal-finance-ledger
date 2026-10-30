@@ -1,10 +1,11 @@
 package com.mahesh.expenses.account;
 
+import com.mahesh.expenses.audit.AuditAction;
+import com.mahesh.expenses.audit.AuditService;
 import com.mahesh.expenses.common.CurrentUser;
+import com.mahesh.expenses.common.EntityType;
 import com.mahesh.expenses.common.NotFoundException;
 import com.mahesh.expenses.user.UserRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.mahesh.expenses.account.AccountDtos.*;
@@ -19,11 +20,13 @@ public class AccountService {
     private final AccountRepository accounts;
     private final UserRepository users;
     private final CurrentUser currentUser;
+    private final AuditService auditService;
 
-    public AccountService(AccountRepository accounts, UserRepository users, CurrentUser currentUser) {
+    public AccountService(AccountRepository accounts, UserRepository users, CurrentUser currentUser, AuditService auditService) {
         this.accounts = accounts;
         this.users = users;
         this.currentUser = currentUser;
+        this.auditService = auditService;
     }
 
     public List<AccountResponse> list(){
@@ -52,8 +55,9 @@ public class AccountService {
         }
         String currency = request.currency() == null ? "INR" : request.currency().toUpperCase();
         BigDecimal openingBalance = request.openingBalance() == null ? BigDecimal.ZERO : request.openingBalance();
-        Account account = new Account(users.getReferenceById(userId), name, currency, request.type(), openingBalance);
-        return AccountResponse.from(accounts.save(account));
+        Account account = accounts.save(new Account(users.getReferenceById(userId), name, currency, request.type(), openingBalance));
+        auditService.record(AuditAction.ACCOUNT_CREATED, EntityType.ACCOUNT.name(), account.getId(),
+                "%s '%s', opening balance %s %s".formatted(account.getType(), name, openingBalance, currency));
+        return AccountResponse.from(account);
     }
-
 }
