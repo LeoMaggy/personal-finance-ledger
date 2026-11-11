@@ -17,7 +17,7 @@ public class JwtConfig {
     SecretKey jwtSecretKey(JwtProperties jwtProperties) {
         byte[] bytes = Base64.getDecoder().decode(jwtProperties.secret());
         if(bytes.length < 32)
-            throw new IllegalArgumentException("app.jwt.secret must be at least 256 bits (32 bytes) for HS256");
+            throw new IllegalStateException("app.jwt.secret must be at least 256 bits (32 bytes) for HS256");
 
         return new SecretKeySpec(bytes, "HmacSHA256");
     }

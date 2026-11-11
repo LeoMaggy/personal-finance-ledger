@@ -70,16 +70,10 @@ public class Transaction {
 
     // Static factories make the three valid shapes explicit and impossible to mix up
     public static Transaction income(User user, BigDecimal amount, Account account, Category category, LocalDate txnDate, String note) {
-        if (category.getType() != CategoryType.INCOME) {
-            throw new IllegalArgumentException("Category type must be INCOME for income transactions.");
-        }
         return new Transaction(user, TransactionType.INCOME, amount, account, null, category, txnDate, note);
     }
 
     public static Transaction expense(User user, BigDecimal amount, Account account, Category category, LocalDate txnDate, String note) {
-        if (category.getType() != CategoryType.EXPENSE) {
-            throw new IllegalArgumentException("Category type must be EXPENSE for expense transactions.");
-        }
         return new Transaction(user, TransactionType.EXPENSE, amount, account, null, category, txnDate, note);
     }
 

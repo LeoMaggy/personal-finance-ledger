@@ -55,4 +55,8 @@ public final class TransactionDtos {
             );
         }
     }
+
+    /** A response plus whether it was replayed from an earlier request with the same Idempotency-Key. */
+    public record TransactionResult(TransactionResponse response, boolean replayed) {
+    }
 }

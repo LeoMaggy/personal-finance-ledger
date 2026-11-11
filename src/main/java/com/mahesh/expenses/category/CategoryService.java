@@ -2,6 +2,7 @@ package com.mahesh.expenses.category;
 
 import com.mahesh.expenses.audit.AuditAction;
 import com.mahesh.expenses.audit.AuditService;
+import com.mahesh.expenses.common.ConflictException;
 import com.mahesh.expenses.common.CurrentUser;
 import com.mahesh.expenses.common.EntityType;
 import com.mahesh.expenses.common.NotFoundException;
@@ -41,7 +42,7 @@ public class CategoryService {
         Long userId = currentUser.id();
         String name = request.name().strip();
         if (categoryRepository.existsByUserIdAndNameIgnoreCaseAndType(userId, name, request.type())) {
-            throw new IllegalArgumentException("Category with name '%s' already exists".formatted(name));
+            throw new ConflictException("Category with name '%s' already exists".formatted(name));
         }
         Category category = categoryRepository.save(new Category(users.getReferenceById(userId), name, request.type()));
         auditService.record(AuditAction.CATEGORY_CREATED, EntityType.CATEGORY.name(), category.getId(),

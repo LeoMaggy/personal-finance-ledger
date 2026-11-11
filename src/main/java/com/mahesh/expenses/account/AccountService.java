@@ -2,6 +2,7 @@ package com.mahesh.expenses.account;
 
 import com.mahesh.expenses.audit.AuditAction;
 import com.mahesh.expenses.audit.AuditService;
+import com.mahesh.expenses.common.ConflictException;
 import com.mahesh.expenses.common.CurrentUser;
 import com.mahesh.expenses.common.EntityType;
 import com.mahesh.expenses.common.NotFoundException;
@@ -30,7 +31,7 @@ public class AccountService {
     }
 
     public List<AccountResponse> list(){
-        return accounts.findByUserIdOrderByNameAsc(currentUser.id())
+        return accounts.findByUserIdOrderByIdAsc(currentUser.id())
                 .stream()
                 .map(AccountResponse::from)
                 .toList();
@@ -51,7 +52,7 @@ public class AccountService {
         Long userId = currentUser.id();
         String name = request.name().strip();
         if (accounts.existsByUserIdAndNameIgnoreCase(userId, name)) {
-            throw new IllegalArgumentException("Account with name '%s' already exists".formatted(name));
+            throw new ConflictException("Account with name '%s' already exists".formatted(name));
         }
         String currency = request.currency() == null ? "INR" : request.currency().toUpperCase();
         BigDecimal openingBalance = request.openingBalance() == null ? BigDecimal.ZERO : request.openingBalance();

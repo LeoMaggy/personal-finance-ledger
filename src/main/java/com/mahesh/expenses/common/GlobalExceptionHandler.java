@@ -35,6 +35,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(ConflictException.class)
     public ProblemDetail conflict(ConflictException ex) {
+        log.warn("Exception Handler: Conflict - {}", ex.getMessage());
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
     }
 
@@ -97,5 +98,10 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         problem.setProperty("errors", errors);
         ResponseEntity<Object> objectResponseEntity = handleExceptionInternal(ex, problem, headers, status, request);
         return objectResponseEntity;
+    }
+
+    @ExceptionHandler(BadRequestException.class)
+    public ProblemDetail badRequest(BadRequestException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 }

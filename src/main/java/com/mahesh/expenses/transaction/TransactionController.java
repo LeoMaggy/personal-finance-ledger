@@ -13,6 +13,9 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/v1/transactions")
 public class TransactionController {
 
+    private final static String IDEMPOTENCY_KEY = "Idempotency-Key";
+    private final static String REPLAYED = "Idempotent-Replayed";
+
     private final TransactionService transactionService;
 
     public TransactionController(TransactionService transactionService) {
@@ -27,28 +30,35 @@ public class TransactionController {
 
     @PostMapping("/incomes")
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseEntity<TransactionResponse> createIncomeTransaction(@Valid @RequestBody TransactionRequest transactionRequest){
-        TransactionResponse response = transactionService.recordIncome(transactionRequest);
-        return ResponseEntity.ok(response);
+    public ResponseEntity<TransactionResponse> createIncomeTransaction(@Valid @RequestBody TransactionRequest transactionRequest,
+                                                                       @RequestHeader(name = IDEMPOTENCY_KEY, required = false) String idempotencyKey) {
+        return created(transactionService.recordIncome(transactionRequest, idempotencyKey));
     }
 
     @PostMapping("/expenses")
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseEntity<TransactionResponse> createExpenseTransaction(@Valid @RequestBody TransactionRequest transactionRequest){
-        TransactionResponse response = transactionService.recordExpense(transactionRequest);
-        return ResponseEntity.ok(response);
+    public ResponseEntity<TransactionResponse> createExpenseTransaction(@Valid @RequestBody TransactionRequest transactionRequest,
+                                                                        @RequestHeader(name = IDEMPOTENCY_KEY, required = false) String idempotencyKey) {
+        return created(transactionService.recordExpense(transactionRequest, idempotencyKey));
     }
 
     @PostMapping("/transfers")
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseEntity<TransactionResponse> createTransferTransaction(@Valid @RequestBody TransferRequest transferRequest){
-        TransactionResponse response = transactionService.recordTransfer(transferRequest);
-        return ResponseEntity.ok(response);
+    public ResponseEntity<TransactionResponse> createTransferTransaction(@Valid @RequestBody TransferRequest transferRequest,
+                                                                         @RequestHeader(name = IDEMPOTENCY_KEY, required = false) String idempotencyKey) {
+        return created(transactionService.recordTransfer(transferRequest, idempotencyKey));
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteTransaction(@PathVariable("id") Long transactionId) {
         transactionService.delete(transactionId);
+    }
+
+    /** A replay returns the same 201 and body as the original, plus a header saying so. */
+    private static ResponseEntity<TransactionResponse> created(TransactionResult result) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .header(REPLAYED, String.valueOf(result.replayed()))
+                .body(result.response());
     }
 }

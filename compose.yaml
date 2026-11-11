@@ -10,5 +10,10 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data   # data survives restarts
 
+  mailpit:
+    image: axllent/mailpit          # local test inbox; pin a version tag for anything shared
+    ports:
+      - "1025:1025"                 # SMTP: the app sends mail here
+      - "8025:8025"                 # web inbox: http://localhost:8025
 volumes:
   pgdata:

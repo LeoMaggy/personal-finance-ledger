@@ -4,12 +4,16 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
+import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 import java.util.TimeZone;
 
 @SpringBootApplication
 @ConfigurationPropertiesScan	// finds @ConfigurationProperties records such as JwtProperties
 @EnableJpaAuditing				// fills @CreatedDate / @LastModifiedDate fields automatically
+@EnableScheduling				// runs @Scheduled methods (daily reminders, cleanup)
+@EnableAsync					// runs @Async methods on a background thread (emails)
 public class FinanceLedgerApplication {
 
 	public static void main(String[] args) {

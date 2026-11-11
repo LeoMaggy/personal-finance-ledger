@@ -4,6 +4,11 @@ app:
     secret: ${JWT_SECRET:hSJBO50ZVgvvE4rZcXOddVW4R5pzNkVEnZHpfrpbrGE=}
     ttl: 1h                        # token lifetime; Spring converts "1h" into a Duration
     issuer: finance-ledger
+  reminders:
+    cron: "0 0 9 * * *"              # second minute hour day month weekday: 9:00 AM daily    //0 * * * * *   //0 0 9 * * *
+    zone: Asia/Kolkata               # the users' time zone, not the server's
+  mail:
+    from: "Finance Ledger <no-reply@finance-ledger.local>"
 spring:
   application:
     name: finance-ledger
@@ -24,6 +29,9 @@ spring:
     virtual:
       enabled: true                # Java 21 virtual threads for requests
 
+  mail:
+    host: localhost
+    port: 1025                       # Mailpit locally; Amazon SES on Day 6
 management:
   endpoints:
     web:

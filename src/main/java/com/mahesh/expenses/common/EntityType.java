@@ -4,5 +4,7 @@ public enum EntityType {
     ACCOUNT,
     CATEGORY,
     TRANSACTION,
-    USER
+    USER,
+    RECURRING,
+    BUDGET
 }

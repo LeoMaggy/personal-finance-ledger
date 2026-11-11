@@ -59,12 +59,12 @@ public class AuthService {
 
         if (user.isEmpty() || !passwordMatches) {
             Long userId = user.map(User::getId).orElse(null);
-            auditService.recordInNewTransaction(userId, AuditAction.LOGIN_FAILED, "USER", userId, "email=" + email);
+            auditService.recordInNewTransaction(userId, AuditAction.LOGIN_FAILED, EntityType.USER.name(), userId, "email=" + email);
             throw new InvalidCredentialsException();
         }
 
         User found = user.get();
-        auditService.recordInNewTransaction(found.getId(), AuditAction.LOGIN_SUCCEEDED, "USER", found.getId(), null);
+        auditService.recordInNewTransaction(found.getId(), AuditAction.LOGIN_SUCCEEDED, EntityType.USER.name(), found.getId(), null);
         TokenService.IssuedToken token = tokenService.issue(found);
         return new TokenResponse(token.value(), "Bearer", token.expiresAt());
     }
