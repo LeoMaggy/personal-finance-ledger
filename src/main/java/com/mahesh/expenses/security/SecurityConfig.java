@@ -21,7 +21,9 @@ public class SecurityConfig {
                 // No HTTP session: every request proves who it is with its own token
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/signup", "/api/v1/auth/login").permitAll()
-                        .requestMatchers("/actuator/health", "/error").permitAll()
+                        .requestMatchers("/actuator/health", "/actuator/health/**", "/actuator/info", "/error").permitAll()
+                        // Day 5: Swagger UI and the OpenAPI JSON are public; every API call still needs a token
+                        .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs", "/v3/api-docs/**").permitAll()
                         .anyRequest().authenticated())
                 //Verify "Authorization: Bearer <jwt>" with the JwtDecoder bean from JwtConfig
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));

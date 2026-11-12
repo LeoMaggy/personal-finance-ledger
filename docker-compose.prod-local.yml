@@ -1,0 +1,39 @@
+# Runs the PRODUCTION image and profile on your laptop, against its own throwaway PostgreSQL and Mailpit.
+#   docker compose -f docker-compose.prod-local.yml up --build
+# Stop the app in IntelliJ first (both use port 8080). Swagger: http://localhost:8080/swagger-ui.html
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: expenses
+      POSTGRES_USER: ledger
+      POSTGRES_PASSWORD: local-only-password
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ledger -d expenses"]
+      interval: 5s
+      retries: 10
+    # no ports: only the app can reach this database, like RDS in a private subnet
+
+  mailpit:
+    image: axllent/mailpit
+    ports:
+      - "8026:8025"          # inbox at http://localhost:8026 (8025 is your dev Mailpit)
+
+  app:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_URL: jdbc:postgresql://db:5432/expenses
+      DB_USERNAME: ledger
+      DB_PASSWORD: local-only-password
+      JWT_SECRET: bG9jYWwtb25seS1zZWNyZXQtZm9yLXRlc3RpbmctMzJieXRlcw==
+      MAIL_HOST: mailpit
+      MAIL_PORT: "1025"
+      MAIL_SMTP_AUTH: "false"
+      MAIL_STARTTLS: "false"
+      MAIL_FROM: "Finance Ledger <no-reply@finance-ledger.local>"

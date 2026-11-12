@@ -1,0 +1,52 @@
+# Production settings, active when SPRING_PROFILES_ACTIVE=prod.
+# Everything secret or environment-specific comes from environment variables (12-factor config);
+# on AWS they're read from SSM Parameter Store by deploy.sh. Nothing secret is committed to Git.
+spring:
+  datasource:
+    url: ${DB_URL}                      # jdbc:postgresql://<rds-endpoint>:5432/expenses
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: 5              # a small RDS instance doesn't need more
+  jpa:
+    show-sql: false
+  mail:
+    host: ${MAIL_HOST:email-smtp.ap-southeast-2.amazonaws.com}   # Amazon SES, Sydney
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail.smtp.auth: ${MAIL_SMTP_AUTH:true}
+      mail.smtp.starttls.enable: ${MAIL_STARTTLS:true}
+      mail.smtp.starttls.required: ${MAIL_STARTTLS:true}
+      mail.smtp.connectiontimeout: 5000   # never let a slow mail server hang a thread
+      mail.smtp.timeout: 5000
+      mail.smtp.writetimeout: 5000
+
+server:
+  forward-headers-strategy: framework   # behind Caddy: trust X-Forwarded-Proto/Host (correct https links in Swagger)
+  shutdown: graceful                    # finish in-flight requests before stopping (default 30 s)
+
+app:
+  jwt:
+    secret: ${JWT_SECRET}               # a NEW secret for prod, never the dev one
+  mail:
+    from: ${MAIL_FROM}                  # must be an SES-verified identity
+  reminders:
+    cron: "0 0 9 * * *"                 # 9 AM India time daily (zone comes from application.yml)
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info            # nothing else is reachable over HTTP
+  endpoint:
+    health:
+      probes:
+        enabled: true                   # /actuator/health/liveness and /readiness
+      show-details: never               # don't reveal DB or disk details to the internet
+
+logging:
+  level:
+    root: INFO
+    com.mahesh.expenses: INFO

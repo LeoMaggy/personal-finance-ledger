@@ -37,6 +37,10 @@ management:
     web:
       exposure:
         include: health,info
+    health:
+      show-details: always
+    mail:
+      enabled: false   # an SES hiccup must not mark the whole app DOWN
 
 logging:
   level:
