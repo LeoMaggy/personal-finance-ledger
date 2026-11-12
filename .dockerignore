@@ -1,0 +1,13 @@
+# Keep the build context small and free of secrets
+target/
+.git/
+.github/
+.idea/
+*.iml
+.vscode/
+postman/
+deploy/
+*.env
+.env*
+docker-compose*.yml
+HELP.md
