@@ -1,0 +1,116 @@
+# Build and test every push and pull request; on main, also build the Docker image,
+# push it to Amazon ECR and deploy it to the EC2 instance. AWS access is through the access key of
+# a dedicated IAM user (github-deployer) stored as GitHub secrets: its policy allows only pushing
+# the finance-ledger image and running the deploy script on the tagged server.
+name: CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:          # "Run workflow" button in the Actions tab
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false   # never cut a deployment off halfway
+
+env:
+  AWS_REGION: ap-southeast-2
+  ECR_REPOSITORY: finance-ledger
+
+jobs:
+  build:
+    name: Build and test
+    runs-on: ubuntu-latest
+    services:
+      postgres:               # a real PostgreSQL for the tests, thrown away after the job
+        image: postgres:17
+        env:
+          POSTGRES_DB: expenses
+          POSTGRES_USER: expenses
+          POSTGRES_PASSWORD: expenses
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U expenses"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+      - name: Build and run the tests
+        run: |
+          sed -i 's/\r$//' mvnw   # in case it was committed from Windows with CRLF line endings
+          chmod +x mvnw
+          ./mvnw -B verify
+        env:
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/expenses
+          SPRING_DATASOURCE_USERNAME: expenses
+          SPRING_DATASOURCE_PASSWORD: expenses
+
+  deploy:
+    name: Push image and deploy
+    needs: build
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Log in to Amazon ECR
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build and push the image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ steps.ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
+            ${{ steps.ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Deploy to EC2 through SSM Run Command
+        if: vars.EC2_INSTANCE_ID != ''          # skipped until the server exists (Step 8)
+        env:
+          INSTANCE_ID: ${{ vars.EC2_INSTANCE_ID }}
+        run: |
+          CMD_ID=$(aws ssm send-command \
+            --instance-ids "$INSTANCE_ID" \
+            --document-name AWS-RunShellScript \
+            --comment "Deploy ${GITHUB_SHA::7}" \
+            --parameters "commands=['/opt/finance-ledger/deploy.sh ${GITHUB_SHA}']" \
+            --query Command.CommandId --output text)
+          echo "SSM command: $CMD_ID"
+          aws ssm wait command-executed --command-id "$CMD_ID" --instance-id "$INSTANCE_ID" || true
+          aws ssm get-command-invocation --command-id "$CMD_ID" --instance-id "$INSTANCE_ID" \
+            --query StandardOutputContent --output text
+          STATUS=$(aws ssm get-command-invocation --command-id "$CMD_ID" --instance-id "$INSTANCE_ID" \
+            --query Status --output text)
+          echo "Deployment status: $STATUS"
+          if [ "$STATUS" != "Success" ]; then
+            aws ssm get-command-invocation --command-id "$CMD_ID" --instance-id "$INSTANCE_ID" \
+              --query StandardErrorContent --output text
+            exit 1
+          fi
+
+      - name: Smoke test the live app
+        if: vars.EC2_INSTANCE_ID != '' && vars.APP_DOMAIN != ''
+        run: |
+          curl -fsS "https://${{ vars.APP_DOMAIN }}/actuator/health" | tee /dev/stderr | grep -q '"status":"UP"'
