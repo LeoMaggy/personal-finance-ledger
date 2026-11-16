@@ -2,6 +2,7 @@ package com.mahesh.expenses.audit;
 
 import com.mahesh.expenses.common.CurrentUser;
 import com.mahesh.expenses.common.PageResponse;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -44,8 +45,11 @@ public class AuditService {
 
     @Transactional(readOnly = true)
     public PageResponse<AuditEntryResponse> myAuditTrail(Pageable pageable) {
+        // The order is fixed (newest first, by the method name). Ignore any client "sort" parameter:
+        // an unknown property such as Swagger's sample "string" would otherwise fail with a 500.
+        Pageable pageOnly = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize());
         return PageResponse.from(auditLogRepository
-                .findByUserIdOrderByCreatedAtDescIdDesc(currentUser.id(), pageable)
+                .findByUserIdOrderByCreatedAtDescIdDesc(currentUser.id(), pageOnly)
                 .map(AuditEntryResponse::from));
     }
 

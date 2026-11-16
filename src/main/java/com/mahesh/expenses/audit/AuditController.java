@@ -1,6 +1,7 @@
 package com.mahesh.expenses.audit;
 
 import com.mahesh.expenses.common.PageResponse;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,7 +20,7 @@ public class AuditController {
 
     /** GET /api/v1/audit?page=0&size=20 */
     @GetMapping
-    public PageResponse<AuditEntryResponse> myAuditTrail(@PageableDefault(size = 20) Pageable pageable) {
+    public PageResponse<AuditEntryResponse> myAuditTrail(@ParameterObject @PageableDefault(size = 20) Pageable pageable) {
         return service.myAuditTrail(pageable);
     }
 }

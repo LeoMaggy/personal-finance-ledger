@@ -3,6 +3,7 @@ package com.mahesh.expenses.transaction;
 import com.mahesh.expenses.common.PageResponse;
 import com.mahesh.expenses.transaction.TransactionDtos.*;
 import jakarta.validation.Valid;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
@@ -24,7 +25,7 @@ public class TransactionController {
 
     /** GET /api/v1/transactions?page=0&size=20 */
     @GetMapping
-    public PageResponse<TransactionResponse> listTransactions(@PageableDefault(size = 20) Pageable pageable) {
+    public PageResponse<TransactionResponse> listTransactions(@ParameterObject @PageableDefault(size = 20) Pageable pageable) {
         return transactionService.list(pageable);
     }
 
