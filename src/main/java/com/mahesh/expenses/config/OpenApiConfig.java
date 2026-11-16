@@ -16,7 +16,8 @@ import org.springframework.context.annotation.Configuration;
 @OpenAPIDefinition(
         info = @Info(title = "Personal Finance Ledger API", version = "v1",
                 description = "Accounts, categories, transactions and transfers, budgets with alerts, "
-                        + "recurring bills with reminders. Log in with POST /api/v1/auth/login, then click Authorize."),
+                        + "recurring bills with reminders. Log in with POST /api/v1/auth/login, then click Authorize." +
+                        " Deployed by GitHub Actions."),
         security = @SecurityRequirement(name = "bearerAuth"))
 @SecurityScheme(name = "bearerAuth", type = SecuritySchemeType.HTTP, scheme = "bearer", bearerFormat = "JWT")
 public class OpenApiConfig {
