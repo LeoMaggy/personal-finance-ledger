@@ -34,18 +34,23 @@ public final class TransactionDtos {
             BigDecimal amount,
             Long accountId,
             String accountName,
+            Long toAccountId,
+            String toAccountName,
             Long categoryId,
             String categoryName,
             LocalDate date,
             String note) {
 
         public static TransactionResponse from(Transaction transaction) {
+            Account from = transaction.getAccount();
             Account to = transaction.getToAccount();
             Category category = transaction.getCategory();
             return new TransactionResponse(
                     transaction.getId(),
                     transaction.getType(),
                     transaction.getAmount(),
+                    from.getId(),
+                    from.getName(),
                     to == null ? null : to.getId(),
                     to == null ? null : to.getName(),
                     category == null ? null : category.getId(),
