@@ -13,6 +13,7 @@ import com.mahesh.expenses.account.AccountService;
 import com.mahesh.expenses.category.CategoryService;
 import com.mahesh.expenses.user.User;
 import com.mahesh.expenses.user.UserRepository;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -37,8 +38,11 @@ public class TransactionService {
 
     static final int EXPORT_LIMIT = 10_000; // Excel can't open more than 1M rows, but we don't want to let the user try that many
 
+    private final ApplicationEventPublisher eventPublisher;
+
 public TransactionService(UserRepository users, CurrentUser currentUser, TransactionRepository transactions,
-                          CategoryService categoryService, AccountService accountService, AuditService auditService, IdempotencyService idempotencyService, BudgetService budgetService) {
+                          CategoryService categoryService, AccountService accountService, AuditService auditService, IdempotencyService idempotencyService,
+                          BudgetService budgetService, ApplicationEventPublisher eventPublisher) {
         this.users = users;
         this.currentUser = currentUser;
         this.transactions = transactions;
@@ -47,7 +51,8 @@ public TransactionService(UserRepository users, CurrentUser currentUser, Transac
         this.auditService = auditService;
         this.idempotencyService = idempotencyService;
         this.budgetService = budgetService;
-    }
+        this.eventPublisher = eventPublisher;
+}
 
     /*public PageResponse<TransactionResponse> list(Pageable pageable) {
         return PageResponse.from(transactions.findByUserIdOrderByTransactionDateDescIdDesc(currentUser.id(), pageable)
@@ -98,6 +103,10 @@ public TransactionService(UserRepository users, CurrentUser currentUser, Transac
         if(transactionType == TransactionType.EXPENSE) {
             budgetService.checkBudgetThresholdsAfterExpense(transactionSaved);
         }
+
+        // Day 6: report cache
+        eventPublisher.publishEvent(TransactionsChanged.of(currentUser.id(), transactionSaved.getTransactionDate()));
+
         return transactionSaved;
     }
 
@@ -130,6 +139,9 @@ public TransactionService(UserRepository users, CurrentUser currentUser, Transac
                 request.amount(), from, to, request.date(), request.note()));
         auditService.record(AuditAction.TRANSFER_MADE, "TRANSACTION", saved.getId(),
                 "%s from account %d to account %d".formatted(request.amount(), from.getId(), to.getId()));
+
+        // Day 6: report cache
+        eventPublisher.publishEvent(TransactionsChanged.of(currentUser.id(), saved.getTransactionDate()));
         return saved;
     }
 
@@ -150,6 +162,8 @@ public TransactionService(UserRepository users, CurrentUser currentUser, Transac
             default -> throw new IllegalStateException("Unexpected transaction type: " + txn.getType());
         }
         transactions.delete(txn);
+        // Day 6: report cache
+        eventPublisher.publishEvent(TransactionsChanged.of(currentUser.id(), txn.getTransactionDate()));
         auditService.record(AuditAction.TRANSACTION_DELETED, EntityType.TRANSACTION.name(), txn.getId(),
                 "%s %s reversed".formatted(txn.getType(), txn.getAmount()));
     }

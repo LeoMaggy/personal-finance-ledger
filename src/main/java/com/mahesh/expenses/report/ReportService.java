@@ -2,6 +2,7 @@ package com.mahesh.expenses.report;
 
 import com.mahesh.expenses.report.ReportDtos.*;
 import com.mahesh.expenses.transaction.TransactionType;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,7 +24,11 @@ public class ReportService {
         this.reportRepository = reportRepository;
     }
 
-    /** userId is a parameter (not read inside) so that, in Step 4, it can be part of the cache key. */
+    /**
+     * Cached per user AND month: the key "7:2026-11" can never serve user 7's numbers to user 8.
+     * Evicted by ReportCacheEvictor after any change commits; the TTL is the safety net.
+     */
+    @Cacheable(cacheNames = MONTHLY_SUMMARY_QUERY, key = "#userId + ':' + #month")
     public MonthlySummary monthlySummary(Long userId, YearMonth month) {
         var from = month.atDay(1);
         var to = month.plusMonths(1).atDay(1);                      // exclusive: works for 28, 30 or 31 days
