@@ -6,7 +6,9 @@ import jakarta.validation.Valid;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -68,5 +70,13 @@ public class TransactionController {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .header(REPLAYED, String.valueOf(result.replayed()))
                 .body(result.response());
+    }
+
+    @GetMapping(value = "/export", produces = "text/csv")
+    public ResponseEntity<String> exportTransactions(@ParameterObject TransactionSearch search) {
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"transactions.csv\"")
+                .contentType(MediaType.parseMediaType("test/csv; charset=UTF-8"))
+                .body(transactionService.exportCsv(search));
     }
 }

@@ -6,19 +6,21 @@ import com.mahesh.expenses.audit.AuditService;
 import com.mahesh.expenses.budget.BudgetService;
 import com.mahesh.expenses.category.Category;
 import com.mahesh.expenses.category.CategoryType;
-import com.mahesh.expenses.common.BusinessRuleException;
+import com.mahesh.expenses.common.*;
 import com.mahesh.expenses.idempotency.IdempotencyService;
 import com.mahesh.expenses.transaction.TransactionDtos.*;
 import com.mahesh.expenses.account.AccountService;
 import com.mahesh.expenses.category.CategoryService;
-import com.mahesh.expenses.common.CurrentUser;
-import com.mahesh.expenses.common.PageResponse;
 import com.mahesh.expenses.user.User;
 import com.mahesh.expenses.user.UserRepository;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.mahesh.expenses.common.EntityType;
+
+import java.util.Arrays;
+import java.util.List;
 
 @Service
 @Transactional(readOnly = true)
@@ -32,6 +34,8 @@ public class TransactionService {
     private final AuditService auditService;
     private final IdempotencyService idempotencyService;
     private final BudgetService budgetService;
+
+    static final int EXPORT_LIMIT = 10_000; // Excel can't open more than 1M rows, but we don't want to let the user try that many
 
 public TransactionService(UserRepository users, CurrentUser currentUser, TransactionRepository transactions,
                           CategoryService categoryService, AccountService accountService, AuditService auditService, IdempotencyService idempotencyService, BudgetService budgetService) {
@@ -164,6 +168,34 @@ public TransactionService(UserRepository users, CurrentUser currentUser, Transac
     private static TransactionResult toResult(IdempotencyService.Outcome outcome) {
         return new TransactionResult(TransactionResponse.from(outcome.transaction()), outcome.replayed());
     }
+
+    /** The same filters as transaction search, as a CSV that opens safely in Excel. */
+    @Transactional(readOnly = true)
+    public String exportCsv(TransactionSearch search) {
+        //Ask for one row more than the limit; if it comes back, the user must narrow the search before exporting.
+        Pageable firstRows = PageRequest.of(0, EXPORT_LIMIT + 1, Sort.by(Sort.Order.desc("transactionDate"), Sort.Order.desc("id")));
+        List<Transaction> rows = transactions.findAll(TransactionSpecs.matching(currentUser.id(), search), firstRows).getContent();
+        if(rows.size() > EXPORT_LIMIT) {
+            throw new BadRequestException("More than %d transactions match this search. Please narrow the date range or other filters before exporting.".formatted(EXPORT_LIMIT));
+        }
+        // Implementation for CSV export would go here
+        StringBuilder csv = new StringBuilder(CsvWriter.row(List.of("Date", "Type", "Amount", "Account", "To Account", "Category", "Note")));
+
+        for(Transaction txn : rows) {
+            csv.append(CsvWriter.row(Arrays.asList(
+                    txn.getTransactionDate().toString(),
+                    txn.getType().name(),
+                    txn.getAmount(),
+                    txn.getAccount().getName(),
+                    txn.getToAccount() != null ? txn.getToAccount().getName() : "",
+                    txn.getCategory() != null ? txn.getCategory().getName() : "",
+                    txn.getNote()
+            )));
+        }
+
+        return csv.toString();
+    }
+
 
 }
 
