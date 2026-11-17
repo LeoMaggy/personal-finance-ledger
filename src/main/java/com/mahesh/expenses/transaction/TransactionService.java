@@ -45,10 +45,18 @@ public TransactionService(UserRepository users, CurrentUser currentUser, Transac
         this.budgetService = budgetService;
     }
 
-    public PageResponse<TransactionResponse> list(Pageable pageable) {
+    /*public PageResponse<TransactionResponse> list(Pageable pageable) {
         return PageResponse.from(transactions.findByUserIdOrderByTransactionDateDescIdDesc(currentUser.id(), pageable)
                 .map(TransactionResponse::from));
+    }*/
+    /** Day 6: the Search. Replaces the Day 1 list method. With no filters it returns the same thing: newest first, paged.*/
+    @Transactional(readOnly = true)
+    public PageResponse<TransactionResponse> search(TransactionSearch search, Pageable pageable) {
+        return PageResponse.from(
+                transactions.findAll(TransactionSpecs.matching(currentUser.id(), search), SortWhitelist.apply(pageable))
+                .map(TransactionResponse::from));
     }
+
 
     @Transactional
     public TransactionResult recordIncome(TransactionRequest request, String idempotencyKey) {

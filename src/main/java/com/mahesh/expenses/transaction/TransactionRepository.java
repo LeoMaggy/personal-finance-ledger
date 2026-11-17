@@ -3,8 +3,10 @@ package com.mahesh.expenses.transaction;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -13,7 +15,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
-public interface TransactionRepository extends JpaRepository<Transaction, Long> {
+public interface TransactionRepository extends JpaRepository<Transaction, Long>, JpaSpecificationExecutor<Transaction> {
     /** One query with joins instead of 1 + 3N: loads the accounts and category with each row. */
     @EntityGraph(attributePaths = {"account", "toAccount", "category"})
     Page<Transaction> findByUserIdOrderByTransactionDateDescIdDesc(Long userId, Pageable pageable);
@@ -40,4 +42,9 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             """)
     List<CategorySpend> sumByCategoryForPeriod(@Param("userId") Long userId, @Param("type") TransactionType type,
                                                @Param("from") LocalDate from, @Param("to") LocalDate to);
+
+    /** Day 6: the Search. One query with joins instead of 1 + 3N lazy loads: loads the accounts and category with each row. */
+    @Override
+    @EntityGraph(attributePaths = {"account", "toAccount", "category"})
+    Page<Transaction> findAll(Specification<Transaction> spec, Pageable pageable);
 }
