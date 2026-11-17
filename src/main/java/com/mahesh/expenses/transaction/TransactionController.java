@@ -24,9 +24,16 @@ public class TransactionController {
     }
 
     /** GET /api/v1/transactions?page=0&size=20 */
-    @GetMapping
+    /*@GetMapping
     public PageResponse<TransactionResponse> listTransactions(@ParameterObject @PageableDefault(size = 20) Pageable pageable) {
         return transactionService.list(pageable);
+    }*/
+
+    /** GET /api/v1/transactions?from=2026-10-01&to=2026-10-30&type=EXPENSE&q=swiggy&sort=amount,desc&page=0&size=20 */
+    @GetMapping
+    public PageResponse<TransactionResponse> searchTransactions(@ParameterObject TransactionSearch search,
+                                                               @ParameterObject @PageableDefault(size = 20) Pageable pageable) {
+        return transactionService.search(search, pageable);
     }
 
     @PostMapping("/incomes")
