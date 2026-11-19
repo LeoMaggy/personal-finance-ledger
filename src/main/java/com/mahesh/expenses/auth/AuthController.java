@@ -25,7 +25,6 @@ public class AuthController {
 
     @SecurityRequirements
     @PostMapping("/auth/login")
-    @ResponseStatus(HttpStatus.CREATED)
     public TokenResponse login(@Valid @RequestBody LoginRequest loginRequest){
         return authService.login(loginRequest);
     }

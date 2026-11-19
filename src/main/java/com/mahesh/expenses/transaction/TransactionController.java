@@ -76,7 +76,7 @@ public class TransactionController {
     public ResponseEntity<String> exportTransactions(@ParameterObject TransactionSearch search) {
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"transactions.csv\"")
-                .contentType(MediaType.parseMediaType("test/csv; charset=UTF-8"))
+                .contentType(MediaType.parseMediaType("text/csv; charset=UTF-8"))
                 .body(transactionService.exportCsv(search));
     }
 }

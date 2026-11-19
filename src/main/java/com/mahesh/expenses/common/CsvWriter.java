@@ -18,7 +18,7 @@ public final class CsvWriter {
     public static String row(List<?> cells) {
         return cells.stream()
                 .map(CsvWriter::cell)
-                .collect(Collectors.joining(",")) + "\n";
+                .collect(Collectors.joining(",")) + "\r\n";
     }
 
     static String cell(Object value) {
