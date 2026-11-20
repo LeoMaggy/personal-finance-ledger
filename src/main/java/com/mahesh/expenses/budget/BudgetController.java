@@ -2,6 +2,7 @@ package com.mahesh.expenses.budget;
 
 import com.mahesh.expenses.budget.BudgetDtos.*;
 import com.mahesh.expenses.common.BadRequestException;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -11,6 +12,7 @@ import java.time.YearMonth;
 import java.time.ZoneId;
 import java.time.format.DateTimeParseException;
 
+@Tag(name = "Budgets")
 @RestController
 @RequestMapping("/api/v1/budgets")
 public class BudgetController {

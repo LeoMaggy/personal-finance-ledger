@@ -1,6 +1,7 @@
 package com.mahesh.expenses.recurring;
 
 import com.mahesh.expenses.recurring.RecurringDtos.*;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -9,6 +10,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 import java.util.List;
 
+@Tag(name = "Recurring")
 @RestController
 @RequestMapping("/api/v1/recurring")
 public class RecurringController {

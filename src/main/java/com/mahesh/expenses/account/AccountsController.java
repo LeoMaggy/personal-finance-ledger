@@ -1,5 +1,6 @@
 package com.mahesh.expenses.account;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -10,6 +11,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import java.net.URI;
 import java.util.List;
 
+@Tag(name = "Accounts")
 @RestController
 @RequestMapping("/api/v1/accounts")
 public class AccountsController {

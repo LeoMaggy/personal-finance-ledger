@@ -2,6 +2,7 @@ package com.mahesh.expenses.transaction;
 
 import com.mahesh.expenses.common.PageResponse;
 import com.mahesh.expenses.transaction.TransactionDtos.*;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
@@ -12,6 +13,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+@Tag(name = "Transactions")
 @RestController
 @RequestMapping("/api/v1/transactions")
 public class TransactionController {
