@@ -1,6 +1,7 @@
 package com.mahesh.expenses.audit;
 
 import com.mahesh.expenses.common.PageResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -8,6 +9,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+
+@Tag(name = "Audit")
 @RestController
 @RequestMapping("/api/v1/audit")
 public class AuditController {

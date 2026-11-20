@@ -149,7 +149,7 @@ public TransactionService(UserRepository users, CurrentUser currentUser, Transac
     @Transactional
     public void delete(Long id){
         Transaction txn = transactions.findByIdAndUserId(id, currentUser.id())
-                .orElseThrow(() -> new BusinessRuleException("Transaction %d not found".formatted(id)));
+                .orElseThrow(() -> new NotFoundException("Transaction %d not found".formatted(id)));
         Account account = txn.getAccount();
         Account toAccount = txn.getToAccount();
         switch(txn.getType()) {

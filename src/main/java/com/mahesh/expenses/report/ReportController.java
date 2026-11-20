@@ -3,6 +3,7 @@ package com.mahesh.expenses.report;
 import com.mahesh.expenses.common.BadRequestException;
 import com.mahesh.expenses.report.ReportDtos.*;
 import com.mahesh.expenses.common.CurrentUser;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,6 +15,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 
+@Tag(name = "Reports")
 @RestController
 @RequestMapping("/api/v1/reports")
 public class ReportController {

@@ -51,7 +51,7 @@ public class Account {
 
     public Account(User user, String name, String currency, AccountType type, BigDecimal openingBalance) {
         if(openingBalance.signum() < 0 && !type.isNegativeBalanceAllowed()){
-            throw new BusinessRuleException("Only a Credit Card account can have a negative opening balance. Please check the account type and opening balance.");
+            throw new BusinessRuleException("Only a Credit Card can start with a negative balance.");
         }
         this.user = user;
         this.name = name;

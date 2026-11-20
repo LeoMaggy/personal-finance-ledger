@@ -5,7 +5,7 @@ app:
     ttl: 1h                        # token lifetime; Spring converts "1h" into a Duration
     issuer: finance-ledger
   reminders:
-    cron: "0 0 9 * * *"              # second minute hour day month weekday: 9:00 AM daily    //0 * * * * *   //0 0 9 * * *
+    cron: "0 * * * * *"              # second minute hour day month weekday: 9:00 AM daily    //0 * * * * *   //0 0 9 * * *
     zone: Asia/Kolkata               # the users' time zone, not the server's
   mail:
     from: "Finance Ledger <no-reply@finance-ledger.local>"
@@ -57,3 +57,6 @@ logging:
   level:
     org.hibernate.SQL: debug       # print every SQL statement, to spot N+1 queries
     org.springframework.cache: TRACE   # print cache-related debug information
+springdoc:
+  swagger-ui:
+    operations-sorter: alpha   # GET, POST, PUT, PATCH, DELETE; or "alpha" to sort by path
